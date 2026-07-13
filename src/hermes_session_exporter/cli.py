@@ -13,6 +13,8 @@ from .redact import redact_messages
 from .exporters.markdown import export_markdown
 from .exporters.html import export_html
 from .exporters.json_export import export_json
+from .models import Message, Session
+from .browse import list_sessions, get_messages, format_timestamp
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,7 +22,10 @@ def build_parser() -> argparse.ArgumentParser:
         prog="hermes-session-exporter",
         description="Export Hermes Agent sessions to Markdown, HTML, or JSON.",
     )
-    sub = p.add_subparsers(dest="command")
+    sub = p.add_subparsers(dest="command", required=False)
+
+    # browse (default)
+    browse_parser = sub.add_parser("browse", help="Browse and export sessions from Hermes store")
 
     # export
     exp = sub.add_parser("export", help="Export session(s) to a target format")
@@ -40,6 +45,76 @@ def build_parser() -> argparse.ArgumentParser:
     ins.add_argument("input", help="JSON file, JSONL file, or directory of session files")
 
     return p
+
+
+def cmd_browse() -> None:
+    sessions = list_sessions()
+    if not sessions:
+        print("No sessions found in Hermes store.")
+        return
+
+    # Show list
+    print(f"\n{'#':>3}  {'Messages':>8}  {'Model':<20} {'When':<18} {'Title'}")
+    print("-" * 80)
+    for i, s in enumerate(sessions, 1):
+        title = (s["title"] or "(untitled)")[:40]
+        when = format_timestamp(s["started_at"])
+        model = (s["model"] or "?")[:20]
+        print(f"{i:>3}  {s['message_count']:>8}  {model:<20} {when:<18} {title}")
+
+    # Pick session
+    print()
+    pick = input("Pick session number (or 'q' to quit): ").strip()
+    if pick.lower() == "q":
+        return
+    try:
+        idx = int(pick) - 1
+        assert 0 <= idx < len(sessions)
+    except (ValueError, AssertionError):
+        print("Invalid selection.")
+        return
+
+    session = sessions[idx]
+    sid = session["id"]
+    title = session["title"] or "(untitled)"
+    print(f"\n--- {title} ({sid}) ---\n")
+
+    # Show messages
+    messages = get_messages(sid)
+    for m in messages:
+        role = m["role"]
+        prefix = {"user": "👤", "assistant": "🤖", "tool": "🔧"}.get(role, "?")
+        content = (m["content"] or "")[:200]
+        if len(m["content"] or "") > 200:
+            content += "..."
+        tool_info = f" ({m['tool_name']})" if m.get("tool_name") else ""
+        print(f"{prefix} {role}{tool_info}: {content}\n")
+
+    print(f"Total: {len(messages)} messages\n")
+
+    # Export?
+    fmt = input("Export? (md/html/json) or Enter to skip: ").strip().lower()
+    if fmt not in ("md", "html", "json"):
+        return
+
+    # Build Session object for export
+    model_msgs = [
+        Message(
+            role=m["role"],
+            content=m["content"] or "",
+            name=m.get("tool_name"),
+        )
+        for m in messages
+    ]
+    sess = Session(title=title, messages=model_msgs, metadata={"session_id": sid})
+
+    export_fn = {"md": export_markdown, "html": export_html, "json": export_json}[fmt]
+    ext_map = {"md": ".md", "html": ".html", "json": ".json"}
+    ext = ext_map[fmt]
+
+    out_path = Path.home() / "Desktop" / f"session_{sid}{ext}"
+    out_path.write_text(export_fn(sess), encoding="utf-8")
+    print(f"\n✓ Exported to {out_path}")
 
 
 def cmd_export(args: argparse.Namespace) -> None:
@@ -65,7 +140,6 @@ def cmd_export(args: argparse.Namespace) -> None:
             session.title = args.title
         session = filter_messages(session, no_tools=args.no_tools, chat_only=args.chat_only)
         if args.redact:
-            from .models import Message
             session.messages = redact_messages(session.messages)
 
         output = export_fn(session)
@@ -141,7 +215,8 @@ def main() -> None:
     elif args.command == "inspect":
         cmd_inspect(args)
     else:
-        parser.print_help()
+        # Default: browse
+        cmd_browse()
 
 
 if __name__ == "__main__":

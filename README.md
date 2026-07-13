@@ -99,6 +99,52 @@ hermes-session-exporter export session.json -f md --json
 }
 ```
 
+## Browse sessions from Hermes store
+
+Run without arguments to interactively browse, preview, and export sessions from your local Hermes database:
+
+```bash
+hermes-session-exporter
+# or explicitly:
+hermes-session-exporter browse
+```
+
+This shows a list of recent sessions with message counts, model, and timestamps. Pick a number to see messages, then choose a format (md/html/json) to export to Desktop.
+
+### Example session
+
+```
+#  Messages  Model                When               Title
+--------------------------------------------------------------------------------
+  1        34  mimo-v2.5-free       2026-07-13 14:19   (untitled)
+  2        64  mimo-v2.5-free       2026-07-13 13:57   (untitled)
+  3        90  nemotron-3-ultra-fre 2026-07-13 13:41   (untitled)
+
+Pick session number (or 'q' to quit): 2
+
+--- (untitled) (05a8753402fd) ---
+
+👤 user: I've uploaded 1 file(s): C:\Users\HP\AppData\Local\hermes\webui\attachments\...
+
+🤖 assistant: Ponytail mode active — full.
+
+What's the task?
+
+👤 user: I've uploaded 1 file(s): C:\Users\HP\AppData\Local\hermes\webui\attachments\...
+
+🤖 assistant: Active. What do you need?
+
+🔧 tool (terminal): make this...
+
+...
+
+Total: 66 messages
+
+Export? (md/html/json) or Enter to skip: md
+
+✓ Exported to C:\Users\HP\Desktop\session_05a8753402fd.md
+```
+
 ## Supported Input
 
 | Format | Structure |
