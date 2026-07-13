@@ -26,4 +26,11 @@ def filter_messages(
         msgs = [m for m in msgs if m.role in ("user", "assistant")]
     elif no_tools:
         msgs = [m for m in msgs if m.role != "tool"]
-    return Session(title=session.title, messages=msgs, metadata=session.metadata)
+    return Session(
+        session_id=session.session_id,
+        title=session.title,
+        messages=msgs,
+        metadata=session.metadata,
+        started_at=session.started_at,
+        ended_at=session.ended_at,
+    )

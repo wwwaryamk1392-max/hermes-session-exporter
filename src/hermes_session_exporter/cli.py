@@ -24,11 +24,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = p.add_subparsers(dest="command", required=False)
 
-    # browse (default)
+    # browse (text mode)
     browse_parser = sub.add_parser("browse", help="Browse and export sessions from Hermes store (text mode)")
 
-    # tui - new
+    # tui
     tui_parser = sub.add_parser("tui", help="Launch interactive TUI browser (Textual)")
+
+    # web
+    web_parser = sub.add_parser("web", help="Launch web UI for session browsing")
+    web_parser.add_argument("--host", default="127.0.0.1", help="Host to bind")
+    web_parser.add_argument("--port", type=int, default=8765, help="Port to bind")
 
     # export
     exp = sub.add_parser("export", help="Export session(s) to a target format")
@@ -219,14 +224,14 @@ def _fail(msg: str, json_output: bool) -> None:
         print(f"Error: {msg}", file=sys.stderr)
     sys.exit(1)
 
-
-def _safe_filename(title: str) -> str:
-    return "".join(c if c.isalnum() or c in " -_" else "" for c in title).strip().replace(" ", "_")[:60] or "session"
-
-
 def cmd_tui() -> None:
     from .tui import run_tui
     run_tui()
+
+
+def cmd_web(args: argparse.Namespace) -> None:
+    from .web import run_server
+    run_server(args.host, args.port)
 
 
 def main() -> None:
@@ -238,6 +243,8 @@ def main() -> None:
         cmd_inspect(args)
     elif args.command == "tui":
         cmd_tui()
+    elif args.command == "web":
+        cmd_web(args)
     else:
         # Default: launch TUI
         cmd_tui()

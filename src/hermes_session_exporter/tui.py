@@ -49,7 +49,7 @@ def load_messages(session_id: str) -> list[dict[str, Any]]:
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
     rows = conn.execute("""
-        SELECT id, session_id, role, content, tool_name, tool_input, tool_output, timestamp
+        SELECT id, session_id, role, content, tool_name, tool_calls, tool_call_id, timestamp
         FROM messages
         WHERE session_id = ?
         ORDER BY id
@@ -68,8 +68,6 @@ def session_to_model(session: dict[str, Any], messages: list[dict[str, Any]]) ->
         msgs.append(Message(
             role=m["role"],
             content=content,
-            tool_calls=m["tool_input"],
-            tool_result=m["tool_output"],
             timestamp=m["timestamp"],
         ))
     started = datetime.fromtimestamp(session["started_at"], tz=timezone.utc) if session["started_at"] else datetime.now(timezone.utc)
@@ -102,13 +100,14 @@ class ExportDialog(ModalScreen):
 
     BINDINGS = [Binding("escape", "dismiss", "Cancel")]
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session | None):
         super().__init__()
         self.session = session
 
     def compose(self) -> ComposeResult:
+        title = f"Export session: {self.session.session_id[:8]}..." if self.session else f"Export {len(self.app.selected_sessions)} selected sessions"
         yield Vertical(
-            Label(f"Export session: {self.session.session_id[:8]}..."),
+            Label(title),
             Button("Markdown (.md)", id="export_md", variant="primary"),
             Button("HTML (.html)", id="export_html", variant="primary"),
             Button("JSON (.json)", id="export_json", variant="primary"),
@@ -160,7 +159,9 @@ class SessionBrowser(App):
         Binding("q", "quit", "Quit"),
         Binding("enter", "view_messages", "View"),
         Binding("e", "export", "Export"),
+        Binding("E", "export_selected", "Export Selected"),
         Binding("r", "refresh", "Refresh"),
+        Binding("s", "toggle_select", "Select"),
     ]
 
     def __init__(self):
@@ -168,6 +169,7 @@ class SessionBrowser(App):
         self.sessions: list[dict[str, Any]] = []
         self.current_session: Session | None = None
         self.current_messages: list[dict[str, Any]] = []
+        self.selected_sessions: set[str] = set()
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -191,7 +193,8 @@ class SessionBrowser(App):
         for i, s in enumerate(self.sessions, 1):
             started = datetime.fromtimestamp(s["started_at"], tz=timezone.utc).strftime("%Y-%m-%d %H:%M") if s["started_at"] else "?"
             title = s["title"] or "(untitled)"
-            table.add_row(str(i), str(s["message_count"]), s["model"] or "?", started, title, key=s["id"])
+            prefix = "✓ " if s["id"] in self.selected_sessions else ""
+            table.add_row(str(i), str(s["message_count"]), s["model"] or "?", started, f"{prefix}{title}", key=s["id"])
 
     def action_refresh(self) -> None:
         self.refresh_sessions()
@@ -228,16 +231,66 @@ class SessionBrowser(App):
         ext = {"md": "md", "html": "html", "json": "json"}[fmt]
         out_path = desktop / f"session_{self.current_session.session_id}_{ts}.{ext}"
 
-        filtered = filter_messages(self.current_session.messages, chat_only=False, no_tools=False)
+        filtered = filter_messages(self.current_session, chat_only=False, no_tools=False)
 
         if fmt == "md":
-            export_markdown(self.current_session, out_path, filtered=filtered)
+            content = export_markdown(filtered)
         elif fmt == "html":
-            export_html(self.current_session, out_path, filtered=filtered)
+            content = export_html(filtered)
         elif fmt == "json":
-            export_json(self.current_session, out_path, filtered=filtered)
+            content = export_json(filtered)
 
+        out_path.write_text(content, encoding="utf-8")
         self.notify(f"Exported to {out_path}")
+
+    def action_toggle_select(self) -> None:
+        """Toggle selection of the currently highlighted session."""
+        table = self.query_one("#session_table", DataTable)
+        if table.cursor_row >= len(self.sessions):
+            return
+        session_id = self.sessions[table.cursor_row]["id"]
+        if session_id in self.selected_sessions:
+            self.selected_sessions.remove(session_id)
+        else:
+            self.selected_sessions.add(session_id)
+        self.refresh_sessions()
+
+    def action_export_selected(self) -> None:
+        """Export all selected sessions."""
+        if not self.selected_sessions:
+            self.notify("No sessions selected", severity="warning")
+            return
+        self.push_screen(ExportDialog(None), self.handle_export_selected)
+
+    def handle_export_selected(self, fmt: str | None) -> None:
+        if not fmt:
+            return
+        desktop = Path.home() / "Desktop"
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        ext = {"md": "md", "html": "html", "json": "json"}[fmt]
+
+        for session_id in list(self.selected_sessions):
+            session_data = next((s for s in self.sessions if s["id"] == session_id), None)
+            if not session_data:
+                continue
+            messages = load_messages(session_id)
+            session = session_to_model(session_data, messages)
+
+            out_path = desktop / f"session_{session_id}_{ts}.{ext}"
+            filtered = filter_messages(session, chat_only=False, no_tools=False)
+
+            if fmt == "md":
+                content = export_markdown(filtered)
+            elif fmt == "html":
+                content = export_html(filtered)
+            elif fmt == "json":
+                content = export_json(filtered)
+
+            out_path.write_text(content, encoding="utf-8")
+
+        self.notify(f"Exported {len(self.selected_sessions)} sessions to Desktop")
+        self.selected_sessions.clear()
+        self.refresh_sessions()
 
 
 def run_tui() -> None:

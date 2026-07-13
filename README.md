@@ -1,21 +1,28 @@
 # hermes-session-exporter
 
-Export [Hermes Agent](https://github.com/NousResearch/hermes-agent) conversation sessions into clean, shareable formats.
+Export [Hermes Agent](https://github.com/NousResearch/hermes-agent) conversation sessions to clean, shareable formats (Markdown, HTML, JSON). Includes an interactive TUI browser and a web panel for localhost access.
+
+## Features
+
+- **Export formats**: Markdown (GitHub-flavored), HTML (standalone with embedded CSS), JSON (normalized)
+- **Interactive TUI**: Browse, preview, and export sessions from your local Hermes database
+- **Web panel**: Run `hermes-session-exporter web` → open `http://127.0.0.1:8765` in browser (embedded xterm.js terminal)
+- **Select & batch export**: Press `s` to select multiple sessions, `E` to export all at once
+- **Filters**: `--chat-only`, `--no-tools`, `--redact` sensitive content
+- **Cross-platform**: Windows, macOS, Linux (Python 3.10+)
 
 ## Install
 
-### From GitHub (recommended)
+### Quick (pipx - recommended)
 
 ```bash
-git clone https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
-cd hermes-session-exporter
-pip install -e .
+pipx install git+https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
 ```
 
-### One-liner
+### Quick (pip)
 
 ```bash
-pip install git+https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
+pip install --user git+https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
 ```
 
 ### From source
@@ -23,85 +30,25 @@ pip install git+https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
 ```bash
 git clone https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
 cd hermes-session-exporter
-python -m venv .venv
-.venv/Scripts/activate        # Windows
-# source .venv/bin/activate   # macOS/Linux
 pip install -e .
 ```
 
-Requires: Python 3.10+
-
 ## Usage
 
-### Export to Markdown
+### Web Panel (browser)
 
 ```bash
-hermes-session-exporter export session.json --format md
-hermes-session-exporter export session.json -f md -o output.md
+hermes-session-exporter web
+# Server starts at http://127.0.0.1:8765
+# Open in browser — full TUI running in embedded terminal
 ```
 
-### Export to HTML
-
+Options:
 ```bash
-hermes-session-exporter export session.json --format html -o output.html
+hermes-session-exporter web --host 0.0.0.0 --port 8080
 ```
 
-### Export to JSON (normalized)
-
-```bash
-hermes-session-exporter export session.json --format json -o normalized.json
-```
-
-### Batch export a directory
-
-```bash
-hermes-session-exporter export ./sessions/ --format md --split --output-dir ./exported/
-```
-
-### Filter messages
-
-```bash
-hermes-session-exporter export session.json --no-tools -f md
-hermes-session-exporter export session.json --chat-only -f md
-```
-
-### Redact sensitive content
-
-```bash
-hermes-session-exporter export session.json --redact -f md
-```
-
-### Inspect input
-
-```bash
-hermes-session-exporter inspect session.json
-```
-
-Output:
-```
-Input type:     JSON
-Sessions:       1
-Total messages: 12
-Roles found:    assistant, tool, user
-Title:          How do I export sessions?
-```
-
-### Machine-readable output
-
-```bash
-hermes-session-exporter export session.json -f md --json
-```
-
-```json
-{
-  "status": "ok",
-  "exports": [{"title": "...", "path": "session.md", "messages": 12}]
-}
-```
-
-## Browse sessions from Hermes store
-
-Run without arguments to interactively browse, preview, and export sessions from your local Hermes database:
+### TUI (terminal)
 
 ```bash
 hermes-session-exporter
@@ -109,93 +56,92 @@ hermes-session-exporter
 hermes-session-exporter browse
 ```
 
-This shows a list of recent sessions with message counts, model, and timestamps. Pick a number to see messages, then choose a format (md/html/json) to export to Desktop.
+**Keys:**
+| Key | Action |
+|-----|--------|
+| `↑/↓` | Navigate sessions |
+| `Enter` | View messages |
+| `e` | Export current session |
+| `s` | **Select/deselect session** ✅ |
+| `E` | Export all selected sessions |
+| `r` | Refresh list |
+| `q` | Quit |
 
-### Example session
+### CLI Export (files)
 
+```bash
+# Export JSON file to Markdown
+hermes-session-exporter export session.json --format md
+
+# Export to HTML
+hermes-session-exporter export session.json --format html -o out.html
+
+# Export to normalized JSON
+hermes-session-exporter export session.json --format json -o normalized.json
+
+# Batch export directory
+hermes-session-exporter export ./sessions/ --format md --split --output-dir ./out/
+
+# Filter messages
+hermes-session-exporter export session.json --chat-only --format md
+hermes-session-exporter export session.json --no-tools --format md
+hermes-session-exporter export session.json --redact --format md
+
+# Inspect input
+hermes-session-exporter inspect session.json
 ```
-#  Messages  Model                When               Title
---------------------------------------------------------------------------------
-  1        34  mimo-v2.5-free       2026-07-13 14:19   (untitled)
-  2        64  mimo-v2.5-free       2026-07-13 13:57   (untitled)
-  3        90  nemotron-3-ultra-fre 2026-07-13 13:41   (untitled)
 
-Pick session number (or 'q' to quit): 2
-
---- (untitled) (05a8753402fd) ---
-
-👤 user: I've uploaded 1 file(s): C:\Users\HP\AppData\Local\hermes\webui\attachments\...
-
-🤖 assistant: Ponytail mode active — full.
-
-What's the task?
-
-👤 user: I've uploaded 1 file(s): C:\Users\HP\AppData\Local\hermes\webui\attachments\...
-
-🤖 assistant: Active. What do you need?
-
-🔧 tool (terminal): make this...
-
-...
-
-Total: 66 messages
-
-Export? (md/html/json) or Enter to skip: md
-
-✓ Exported to C:\Users\HP\Desktop\session_05a8753402fd.md
-```
-
-## Supported Input
+## Input Formats
 
 | Format | Structure |
 |--------|-----------|
-| `.json` | Single session (`{"messages": [...]}`), array of sessions, or wrapped (`{"sessions": [...]}`) |
+| `.json` | Single session `{"messages": [...]}`, array of sessions, or wrapped `{"sessions": [...]}` |
 | `.jsonl` | One message per line, or one session object per line |
 | Directory | Scans all `.json` and `.jsonl` files |
 
-## Supported Output
+## Output Formats
 
-| Flag | Output |
-|------|--------|
-| `--format md` | GitHub-flavored Markdown |
-| `--format html` | Standalone HTML with embedded CSS |
+| Format | Description |
+|--------|-------------|
+| `--format md` | GitHub-flavored Markdown with role headers |
+| `--format html` | Standalone HTML with embedded CSS (blue=user, green=assistant, purple=tool) |
 | `--format json` | Normalized JSON with stable structure |
 
-## Sample Output
+## How It Works
 
-### Markdown
+1. **Local Hermes DB**: Reads from `~/AppData/Local/hermes/state.db` (Windows) or `~/.local/share/hermes/state.db` (Linux/macOS)
+2. **Sessions table**: `id`, `title`, `message_count`, `started_at`, `ended_at`, `model`, `source`
+3. **Messages table**: `id`, `session_id`, `role`, `content`, `tool_name`, `timestamp`, `tool_calls`, `tool_call_id`
+4. **Exports** saved to Desktop by default
 
-```markdown
-# How do I export sessions?
+## Project Structure
 
-## User
-
-How do I export my Hermes sessions to Markdown?
-
-## Assistant
-
-You can use hermes-session-exporter:
-
-```bash
-hermes-session-exporter export session.json --format md
+```
+hermes-session-exporter/
+├── src/hermes_session_exporter/
+│   ├── cli.py           # CLI entry point (web, browse, export, inspect)
+│   ├── tui.py           # Textual TUI browser with select/export
+│   ├── web.py           # FastAPI + uvicorn + xterm.js web panel
+│   ├── models.py        # Session, Message dataclasses
+│   ├── normalize.py     # Filtering (chat-only, no-tools, redact)
+│   ├── loader.py        # File loading (json, jsonl, dir)
+│   ├── exporters/
+│   │   ├── markdown.py  # MD export
+│   │   ├── html.py      # HTML export
+│   │   └── json_export.py
+│   └── redact.py        # PII/secret redaction
+├── tests/
+├── pyproject.toml
+└── README.md
 ```
 
-This converts the session to clean GitHub-friendly Markdown.
-```
+## Requirements
 
-### HTML
+- Python 3.10+
+- `textual>=0.80` (TUI)
+- `fastapi`, `uvicorn[standard]`, `websockets`, `textual-web` (web panel)
+- `pydantic` (models)
 
-Standalone HTML with embedded CSS, role-based color coding (blue for user, green for assistant, purple for tool output), and semantic markup.
+## License
 
-## Limitations
-
-- No streaming/progress for large files (reads entire file into memory).
-- Redaction is pattern-based — not an audit tool.
-- HTML uses minimal inline CSS, no JS, no external dependencies.
-- No rewrite/summarize — raw content only.
-
-## Roadmap
-
-- CSV/table export for message overview
-- Token counting per message
-- Stdin/pipe support
+MIT

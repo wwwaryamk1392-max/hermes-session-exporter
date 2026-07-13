@@ -17,6 +17,9 @@ class Message:
 
 @dataclass
 class Session:
+    session_id: str
     title: str | None
     messages: list[Message]
     metadata: dict[str, Any] = field(default_factory=dict)
+    started_at: str | None = None
+    ended_at: str | None = None

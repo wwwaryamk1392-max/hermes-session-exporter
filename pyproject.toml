@@ -7,7 +7,7 @@ name = "hermes-session-exporter"
 version = "0.1.0"
 description = "Export Hermes Agent sessions to Markdown, HTML, or normalized JSON."
 readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
 requires-python = ">=3.10"
 keywords = ["hermes", "export", "markdown", "cli"]
 classifiers = [
@@ -18,12 +18,16 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
+    "rich>=13.0",
     "textual>=0.80",
+    "fastapi>=0.100",
+    "uvicorn>=0.23",
 ]
 
 [project.scripts]
 hermes-session-exporter = "hermes_session_exporter.cli:main"
 hermes-session-tui = "hermes_session_exporter.tui:run_tui"
+hermes-session-web = "hermes_session_exporter.web:run_server"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hermes_session_exporter"]
