@@ -17,9 +17,13 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Utilities",
 ]
+dependencies = [
+    "textual>=0.80",
+]
 
 [project.scripts]
 hermes-session-exporter = "hermes_session_exporter.cli:main"
+hermes-session-tui = "hermes_session_exporter.tui:run_tui"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hermes_session_exporter"]

@@ -25,7 +25,10 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="command", required=False)
 
     # browse (default)
-    browse_parser = sub.add_parser("browse", help="Browse and export sessions from Hermes store")
+    browse_parser = sub.add_parser("browse", help="Browse and export sessions from Hermes store (text mode)")
+
+    # tui - new
+    tui_parser = sub.add_parser("tui", help="Launch interactive TUI browser (Textual)")
 
     # export
     exp = sub.add_parser("export", help="Export session(s) to a target format")
@@ -115,6 +118,20 @@ def cmd_browse() -> None:
     out_path = Path.home() / "Desktop" / f"session_{sid}{ext}"
     out_path.write_text(export_fn(sess), encoding="utf-8")
     print(f"\n✓ Exported to {out_path}")
+
+
+def cmd_tui() -> None:
+    """Launch the Textual TUI for interactive browsing."""
+    try:
+        from .tui import HermesSessionBrowser
+        app = HermesSessionBrowser()
+        app.run()
+    except ImportError:
+        print("Textual not installed. Install with: pip install textual")
+        sys.exit(1)
+    except Exception as e:
+        print(f"TUI error: {e}")
+        sys.exit(1)
 
 
 def cmd_export(args: argparse.Namespace) -> None:
@@ -207,6 +224,11 @@ def _safe_filename(title: str) -> str:
     return "".join(c if c.isalnum() or c in " -_" else "" for c in title).strip().replace(" ", "_")[:60] or "session"
 
 
+def cmd_tui() -> None:
+    from .tui import run_tui
+    run_tui()
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -214,9 +236,11 @@ def main() -> None:
         cmd_export(args)
     elif args.command == "inspect":
         cmd_inspect(args)
+    elif args.command == "tui":
+        cmd_tui()
     else:
-        # Default: browse
-        cmd_browse()
+        # Default: launch TUI
+        cmd_tui()
 
 
 if __name__ == "__main__":
