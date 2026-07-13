@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Label, Static
 from textual.widgets.data_table import RowKey
 from textual.message import Message
@@ -82,19 +82,6 @@ def session_to_model(session: dict[str, Any], messages: list[dict[str, Any]]) ->
     )
 
 
-class MessageView(Static):
-    """Scrollable view of session messages."""
-
-    def __init__(self, session: Session, **kwargs):
-        super().__init__(**kwargs)
-        self.session = session
-
-    def compose(self) -> ComposeResult:
-        for msg in self.session.messages:
-            role_label = {"user": "👤 User", "assistant": "🤖 Assistant", "tool": "🔧 Tool"}.get(msg.role, msg.role)
-            yield Static(f"[bold]{role_label}[/bold]\n{msg.content}", classes="message")
-
-
 class ExportDialog(ModalScreen):
     """Modal dialog to choose export format."""
 
@@ -129,22 +116,10 @@ class SessionBrowser(App):
 
     CSS = """
     Screen {
-        layout: horizontal;
-    }
-    #sessions_panel {
-        width: 40%;
-        border-right: solid $primary;
-    }
-    #messages_panel {
-        width: 60%;
+        layout: vertical;
     }
     #session_table {
-        height: 100%;
-    }
-    .message {
-        padding: 1;
-        margin: 1 0;
-        border: solid $secondary;
+        height: 1fr;
     }
     #export_dialog {
         width: 50;
@@ -173,13 +148,9 @@ class SessionBrowser(App):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Horizontal():
-            with Vertical(id="sessions_panel"):
-                yield Label("Hermes Sessions", id="sessions_title")
-                yield DataTable(id="session_table", cursor_type="row")
-            with Vertical(id="messages_panel"):
-                yield Label("Messages", id="messages_title")
-                yield Static("Select a session to view messages", id="messages_content")
+        with Vertical():
+            yield Label("Hermes Sessions", id="sessions_title")
+            yield DataTable(id="session_table", cursor_type="row")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -211,11 +182,8 @@ class SessionBrowser(App):
         self.current_messages = load_messages(session_id)
         session_data = next((s for s in self.sessions if s["id"] == session_id), {})
         self.current_session = session_to_model(session_data, self.current_messages)
-        content = self.query_one("#messages_content", Static)
-        content.remove_children()
-        for msg in self.current_session.messages:
-            role_label = {"user": "👤 User", "assistant": "🤖 Assistant", "tool": "🔧 Tool"}.get(msg.role, msg.role)
-            content.mount(Static(f"[bold]{role_label}[/bold]\n{msg.content}", classes="message"))
+        # Show messages in a modal instead of side panel
+        self.push_screen(MessageView(self.current_session))
 
     def action_export(self) -> None:
         if not self.current_session:
@@ -291,6 +259,26 @@ class SessionBrowser(App):
         self.notify(f"Exported {len(self.selected_sessions)} sessions to Desktop")
         self.selected_sessions.clear()
         self.refresh_sessions()
+
+
+class MessageView(ModalScreen):
+    """Modal view of session messages."""
+
+    BINDINGS = [Binding("escape", "dismiss", "Close")]
+
+    def __init__(self, session: Session):
+        super().__init__()
+        self.session = session
+
+    def compose(self) -> ComposeResult:
+        yield Vertical(
+            Label(f"Messages: {self.session.title or self.session.session_id[:8]}...", id="msg_title"),
+            *(
+                Static(f"[bold]{'👤 User' if m.role == 'user' else '🤖 Assistant' if m.role == 'assistant' else '🔧 Tool'}[/bold]\n{m.content}", classes="message")
+                for m in self.session.messages
+            ),
+            id="message_view",
+        )
 
 
 def run_tui() -> None:
