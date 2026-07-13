@@ -16,19 +16,19 @@ Export [Hermes Agent](https://github.com/NousResearch/hermes-agent) conversation
 ### Quick (pipx - recommended)
 
 ```bash
-pipx install git+https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
+pipx install git+https://github.com/aRYmK13/hermes-session-exporter.git
 ```
 
 ### Quick (pip)
 
 ```bash
-pip install --user git+https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
+pip install --user git+https://github.com/aRYmK13/hermes-session-exporter.git
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
+git clone https://github.com/aRYmK13/hermes-session-exporter.git
 cd hermes-session-exporter
 pip install -e .
 ```
