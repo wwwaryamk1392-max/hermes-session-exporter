@@ -9,6 +9,7 @@ import subprocess
 import sys
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -433,7 +434,15 @@ async def export_session(request: ExportRequest = Body(...)):
         )
         for r in rows
     ]
-    sess_obj = Session(title=title, messages=model_msgs, metadata={"session_id": request.session_id})
+    now = datetime.now(timezone.utc)
+    sess_obj = Session(
+        session_id=request.session_id,
+        messages=model_msgs,
+        metadata={"session_id": request.session_id},
+        title=title,
+        started_at=now,
+        ended_at=None,
+    )
     
     export_fn = {"md": export_markdown, "html": export_html, "json": export_json}[request.format]
     ext_map = {"md": ".md", "html": ".html", "json": ".json"}
