@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How do I export sessions?</title>
+<style>body{font-family:system-ui,sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6;color:#222}
+h1{border-bottom:2px solid #ddd;padding-bottom:.5rem}
+.msg{margin:1.5rem 0;padding:1rem;border-radius:6px;border-left:4px solid #ccc}
+.msg-user{border-color:#2563eb;background:#eff6ff}
+.msg-assistant{border-color:#16a34a;background:#f0fdf4}
+.msg-tool{border-color:#9333ea;background:#faf5ff}
+.role{font-weight:700;margin-bottom:.3rem}
+pre{background:#f5f5f5;padding:.8rem;border-radius:4px;overflow-x:auto}
+code{font-family:monospace;font-size:.9em}
+.meta{color:#666;font-size:.9em;margin-bottom:1rem;border:1px solid #ddd;padding:.5rem;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>How do I export sessions?</h1>
+<div class="meta"><ul><li><b>created_at:</b> 2026-07-13T10:00:00Z</li></ul></div>
+<div class="msg msg-user"><div class="role">User</div><div>How do I export my Hermes sessions to Markdown?</div></div>
+<div class="msg msg-assistant"><div class="role">Assistant</div><div>You can use hermes-session-exporter:<br><br>```bash<br>hermes-session-exporter export session.json --format md<br>```<br><br>This converts the session to clean GitHub-friendly Markdown.</div></div>
+<div class="msg msg-user"><div class="role">User</div><div>What about HTML output?</div></div>
+<div class="msg msg-assistant"><div class="role">Assistant</div><div>Just change the format flag:<br><br>```bash<br>hermes-session-exporter export session.json --format html -o output.html<br>```<br><br>The HTML is standalone with embedded CSS.</div></div>
+<div class="msg msg-tool"><div class="role">Tool: terminal</div><div class="role">Tool Output</div><div>$ hermes-session-exporter export session.json -f html<br>✓ Exported to output.html</div></div>
+<div class="msg msg-assistant"><div class="role">Assistant</div><div>Done! The output is ready to share or archive.</div></div>
+<div class="msg msg-user"><div class="role">User</div><div>Can I redact sensitive info?</div></div>
+<div class="msg msg-assistant"><div class="role">Assistant</div><div>Yes, use `--redact`:<br><br>```bash<br>hermes-session-exporter export session.json --redact -f md<br>```<br><br>It strips API keys, emails, and local paths.</div></div>
+</body>
+</html>

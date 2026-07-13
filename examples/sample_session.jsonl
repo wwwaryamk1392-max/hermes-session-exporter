@@ -1,0 +1,6 @@
+{"role": "user", "content": "Hello, what can you do?"}
+{"role": "assistant", "content": "I'm an AI assistant. I can help with coding, writing, and analysis."}
+{"role": "user", "content": "Show me a Python one-liner for fibonacci."}
+{"role": "assistant", "content": "```python\nfib = lambda n: n if n < 2 else fib(n-1) + fib(n-2)\n```\n\nNote: this is exponential time — use memoization or iteration for production."}
+{"role": "tool", "name": "python_exec", "content": "fib(10) = 55"}
+{"role": "assistant", "content": "fib(10) returns 55. Works!"}

@@ -1,0 +1,48 @@
+{
+  "title": "Hello, what can you do?",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello, what can you do?",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "I'm an AI assistant. I can help with coding, writing, and analysis.",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "Show me a Python one-liner for fibonacci.",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "```python\nfib = lambda n: n if n < 2 else fib(n-1) + fib(n-2)\n```\n\nNote: this is exponential time — use memoization or iteration for production.",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "tool",
+      "content": "fib(10) = 55",
+      "timestamp": null,
+      "name": "python_exec",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "fib(10) returns 55. Works!",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    }
+  ],
+  "metadata": {}
+}
