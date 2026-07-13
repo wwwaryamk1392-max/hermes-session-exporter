@@ -2,15 +2,34 @@
 
 Export [Hermes Agent](https://github.com/NousResearch/hermes-agent) conversation sessions into clean, shareable formats.
 
-## Why
-
-Hermes stores sessions as raw JSON/JSONL. This tool turns them into GitHub-friendly Markdown, standalone HTML, or normalized JSON — ready for sharing, archiving, or downstream tooling.
-
 ## Install
 
+### From GitHub (recommended)
+
 ```bash
+git clone https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
+cd hermes-session-exporter
 pip install -e .
 ```
+
+### One-liner
+
+```bash
+pip install git+https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
+```
+
+### From source
+
+```bash
+git clone https://github.com/wwwaryamk1392-max/hermes-session-exporter.git
+cd hermes-session-exporter
+python -m venv .venv
+.venv/Scripts/activate        # Windows
+# source .venv/bin/activate   # macOS/Linux
+pip install -e .
+```
+
+Requires: Python 3.10+
 
 ## Usage
 
@@ -42,10 +61,7 @@ hermes-session-exporter export ./sessions/ --format md --split --output-dir ./ex
 ### Filter messages
 
 ```bash
-# Exclude tool messages
 hermes-session-exporter export session.json --no-tools -f md
-
-# Chat only (user + assistant)
 hermes-session-exporter export session.json --chat-only -f md
 ```
 
@@ -66,7 +82,7 @@ Output:
 Input type:     JSON
 Sessions:       1
 Total messages: 12
-Roles found:    assistant, user
+Roles found:    assistant, tool, user
 Title:          How do I export sessions?
 ```
 
@@ -99,16 +115,41 @@ hermes-session-exporter export session.json -f md --json
 | `--format html` | Standalone HTML with embedded CSS |
 | `--format json` | Normalized JSON with stable structure |
 
+## Sample Output
+
+### Markdown
+
+```markdown
+# How do I export sessions?
+
+## User
+
+How do I export my Hermes sessions to Markdown?
+
+## Assistant
+
+You can use hermes-session-exporter:
+
+```bash
+hermes-session-exporter export session.json --format md
+```
+
+This converts the session to clean GitHub-friendly Markdown.
+```
+
+### HTML
+
+Standalone HTML with embedded CSS, role-based color coding (blue for user, green for assistant, purple for tool output), and semantic markup.
+
 ## Limitations
 
-- No streaming/progress for large files (read entire file into memory).
+- No streaming/progress for large files (reads entire file into memory).
 - Redaction is pattern-based — not an audit tool.
-- HTML output uses minimal inline CSS, no JS, no external dependencies.
+- HTML uses minimal inline CSS, no JS, no external dependencies.
 - No rewrite/summarize — raw content only.
 
 ## Roadmap
 
 - CSV/table export for message overview
 - Token counting per message
-- Filter by role with regex patterns
 - Stdin/pipe support
