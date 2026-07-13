@@ -1,0 +1,64 @@
+{
+  "title": "How do I export sessions?",
+  "messages": [
+    {
+      "role": "user",
+      "content": "How do I export my Hermes sessions to Markdown?",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "You can use hermes-session-exporter:\n\n```bash\nhermes-session-exporter export session.json --format md\n```\n\nThis converts the session to clean GitHub-friendly Markdown.",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "What about HTML output?",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Just change the format flag:\n\n```bash\nhermes-session-exporter export session.json --format html -o output.html\n```\n\nThe HTML is standalone with embedded CSS.",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "tool",
+      "content": "$ hermes-session-exporter export session.json -f html\n✓ Exported to output.html",
+      "timestamp": null,
+      "name": "terminal",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Done! The output is ready to share or archive.",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "Can I redact sensitive info?",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Yes, use `--redact`:\n\n```bash\nhermes-session-exporter export session.json --redact -f md\n```\n\nIt strips API keys, emails, and local paths.",
+      "timestamp": null,
+      "name": null,
+      "metadata": {}
+    }
+  ],
+  "metadata": {
+    "created_at": "2026-07-13T10:00:00Z"
+  }
+}
